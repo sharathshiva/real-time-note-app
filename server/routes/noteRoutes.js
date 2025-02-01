@@ -20,7 +20,7 @@ router.post('/', authMiddleware, async (req, res) => {
 // Get User Notes
 router.get('/', authMiddleware, async (req, res) => {
   try {
-      const notes = await Note.find({ userId: req.user.id });
+      const notes = await Note.find();
       res.json(notes);
   } catch (err) {
       res.status(500).json({ message: "Error fetching notes" });
