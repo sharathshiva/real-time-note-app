@@ -12,8 +12,7 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         await handleLogin(formData);
-        alert("Login successful!");
-        navigate('/');
+        navigate('/notes');  // Redirect to /notes after login
     };
 
     return (

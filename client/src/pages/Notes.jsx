@@ -3,11 +3,12 @@ import { io } from 'socket.io-client';
 import { AuthContext } from '../context/AuthContext';
 import { getNotes, createNote, updateNote, deleteNote } from '../services/noteService';
 import { jwtDecode } from 'jwt-decode';
+import Login from './Login';
 
 const socket = io('http://localhost:8080'); // Connect to WebSocket server
 
 const Notes = () => {
-  const { user } = useContext(AuthContext);
+  const { user, handleLogout } = useContext(AuthContext);
   const [notes, setNotes] = useState([]);
   const [form, setForm] = useState({ title: '', content: '', category: 'General' });
   const [editingNote, setEditingNote] = useState(null);
@@ -20,7 +21,7 @@ const Notes = () => {
     if (user) {
       fetchNotes();
       try {
-        const decoded = jwtDecode(user); // Decode the JWT token
+        const decoded = jwtDecode(localStorage.getItem('token')); // Decode the JWT token
         setUserInfo(decoded); // Store user info
         console.log('Decoded user:', decoded);
         // Emit full user object with email to avoid duplicates
@@ -93,6 +94,10 @@ const Notes = () => {
 
   return (
     <div>
+        {user ? (
+            <>
+            <h1>Welcome, {user.username}</h1>
+            <button onClick={handleLogout}>Logout</button>
       <h1>Your Notes</h1>
 
       <form onSubmit={handleSubmit}>
@@ -157,6 +162,10 @@ const Notes = () => {
           </li>
         ))}
       </ul>
+      </>
+            ) : (
+                <Login />
+            )}
     </div>
   );
 };
