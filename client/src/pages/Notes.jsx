@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { getNotes, createNote, updateNote, deleteNote } from '../services/noteService';
 import { jwtDecode } from 'jwt-decode';
 import Login from './Login';
+import { Button } from '@/components/ui/button';
 
 const socket = io('http://localhost:8080'); // Connect to WebSocket server
 
@@ -97,7 +98,7 @@ const Notes = () => {
         {user ? (
             <>
             <h1>Welcome, {user.username}</h1>
-            <button onClick={handleLogout}>Logout</button>
+            <Button onClick={handleLogout}>Logout</Button>
       <h1>Your Notes</h1>
 
       <form onSubmit={handleSubmit}>
