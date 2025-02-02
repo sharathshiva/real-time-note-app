@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { io } from 'socket.io-client';
 import { AuthContext } from '../context/AuthContext';
 import { getNotes, createNote, updateNote, deleteNote } from '../services/noteService';
-
+import {jwtDecode} from 'jwt-decode';
 const socket = io('http://localhost:8080'); // Connect to WebSocket server
 
 const Notes = () => {
@@ -12,9 +12,28 @@ const Notes = () => {
     const [editingNote, setEditingNote] = useState(null);
     const [filterCategory, setFilterCategory] = useState("All"); // For filtering
     const [searchQuery, setSearchQuery] = useState(""); // Search notes
+    const [onlineUsers, setOnlineUsers] = useState([]); // Track online users
+    const [userInfo, setUserInfo] = useState(null);
 
     useEffect(() => {
-        if (user) fetchNotes();
+        if (user) {
+            fetchNotes();
+            try {
+                const decoded = jwtDecode(user); // Decode the JWT token
+                setUserInfo(decoded); // Store user info
+                console.log('Decoded users:', decoded);
+                // Emit full user object with email to avoid duplicates
+                socket.emit('setUsername', { email: decoded.email, username: decoded.username });
+            } catch (error) {
+                console.error('Invalid token:', error);
+            }
+        }
+
+        // Listen for updates to the online users list
+        socket.on('userListUpdate', (users) => {
+            console.log('Online users:', users);
+            setOnlineUsers(users);
+        });
 
         socket.on('noteUpdated', (updatedNote) => {
             setNotes(prevNotes =>
@@ -22,7 +41,11 @@ const Notes = () => {
             );
         });
 
-        return () => socket.off('noteUpdated');
+        return () => {
+            socket.off('noteUpdated');
+            // Clean up when the component unmounts
+            socket.off('userListUpdate');
+        }
     }, [user]);
 
     const fetchNotes = async () => {
@@ -122,6 +145,13 @@ const Notes = () => {
                     </li>
                 ))}
             </ul>
+            <h2>Online Users</h2>
+            <ul>
+                {onlineUsers.map((username, index) => (
+                    <li key={index}>{username}</li>
+                ))}
+            </ul>
+
         </div>
     );
 };
