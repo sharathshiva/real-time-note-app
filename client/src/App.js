@@ -21,7 +21,7 @@ export default App;
 //   const [count, setCount] = useState(0)
 
 //   const fetchAPI = async () => {
-//     const response = await axios.get("http://localhost:8080/api");
+//     const response = await axios.get("https://real-time-note-o578i0grt-sharus-projects-18105f44.vercel.app/api");
 //     console.log(response.data.fruits)
 //   };
   
