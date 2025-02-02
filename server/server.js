@@ -13,17 +13,10 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: {
-    origin: "https://real-time-note-app-ieow.vercel.app", // Allow frontend origin
-    methods: ["GET", "POST", "PUT", "DELETE"]
-  }
+  cors: { origin: "*" }
 });
 
-app.use(cors({
-  origin: ["https://real-time-note-app-ieow.vercel.app"], // Allow only your frontend
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+app.use(cors());
 app.use(express.json());
 
 const Note = require('./models/Note'); // Import Note model
