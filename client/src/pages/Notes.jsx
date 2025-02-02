@@ -1,173 +1,202 @@
-import { useState, useEffect, useContext } from 'react';
-import { io } from 'socket.io-client';
-import { AuthContext } from '../context/AuthContext';
-import { getNotes, createNote, updateNote, deleteNote } from '../services/noteService';
-import { jwtDecode } from 'jwt-decode';
-import Login from './Login';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useContext } from "react";
+import { io } from "socket.io-client";
+import { AuthContext } from "../context/AuthContext";
+import { getNotes, createNote, updateNote, deleteNote } from "../services/noteService";
+import { jwtDecode } from "jwt-decode";
+import Login from "./Login";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PlusCircle, Trash, Edit, Search } from "lucide-react";
 
-const socket = io('http://localhost:8080'); // Connect to WebSocket server
+const socket = io("http://localhost:8080"); 
 
 const Notes = () => {
   const { user, handleLogout } = useContext(AuthContext);
   const [notes, setNotes] = useState([]);
-  const [form, setForm] = useState({ title: '', content: '', category: 'General' });
+  const [form, setForm] = useState({ title: "", content: "", category: "General" });
   const [editingNote, setEditingNote] = useState(null);
-  const [filterCategory, setFilterCategory] = useState('All'); // For filtering
-  const [searchQuery, setSearchQuery] = useState(''); // Search notes
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]); // Track online users
+  const [openDialog, setOpenDialog] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
     if (user) {
       fetchNotes();
       try {
-        const decoded = jwtDecode(localStorage.getItem('token')); // Decode the JWT token
+        const decoded = jwtDecode(localStorage.getItem("token"));
         setUserInfo(decoded); // Store user info
-        console.log('Decoded user:', decoded);
-        // Emit full user object with email to avoid duplicates
-        socket.emit('setUsername', { email: decoded.email, username: decoded.username });
+        socket.emit("setUsername", { email: decoded.email, username: decoded.username });
       } catch (error) {
-        console.error('Invalid token:', error);
+        console.error("Invalid token:", error);
       }
     }
 
     // Listen for updates to the online users list
     socket.on('userListUpdate', (users) => {
-      console.log('Online users:', users);
-      setOnlineUsers(users);
+        console.log('Online users:', users);
+        setOnlineUsers(users);
     });
 
-    // Listen for note updates in real-time
-    socket.on('noteUpdated', (updatedNote) => {
-      setNotes((prevNotes) =>
-        prevNotes.map((note) => (note._id === updatedNote._id ? updatedNote : note))
-      );
+    socket.on("noteUpdated", (updatedNote) => {
+      setNotes((prevNotes) => prevNotes.map((note) => (note._id === updatedNote._id ? updatedNote : note)));
     });
 
     return () => {
-      socket.off('noteUpdated');
+      socket.off("noteUpdated");
       // Clean up when the component unmounts
       socket.off('userListUpdate');
     };
   }, [user]);
 
   const fetchNotes = async () => {
-    const response = await getNotes(localStorage.getItem('token'));
+    const response = await getNotes(localStorage.getItem("token"));
     setNotes(response.data);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     if (editingNote) {
-      socket.emit('updateNote', { ...editingNote, ...form });
+      socket.emit("updateNote", { ...editingNote, ...form });
       setEditingNote(null);
     } else {
       await createNote(form, token);
       fetchNotes();
     }
 
-    setForm({ title: '', content: '', category: 'General' });
+    setForm({ title: "", content: "", category: "General" });
+    setOpenDialog(false);
   };
 
   const handleEdit = (note) => {
     setEditingNote(note);
     setForm({ title: note.title, content: note.content, category: note.category });
+    setOpenDialog(true);
   };
 
   const handleDelete = async (id) => {
-    await deleteNote(id, localStorage.getItem('token'));
+    await deleteNote(id, localStorage.getItem("token"));
     fetchNotes();
   };
 
-  // Extract unique categories for filtering
-  const uniqueCategories = ['All', ...new Set(notes.map((note) => note.category))];
+  const uniqueCategories = ["All", ...new Set(notes.map((note) => note.category))];
 
-  // Filter notes based on selected category
   const filteredNotes = notes.filter(
     (note) =>
-      (filterCategory === 'All' || note.category === filterCategory) &&
+      (filterCategory === "All" || note.category === filterCategory) &&
       (note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         note.content.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
-    <div>
-        {user ? (
-            <>
-            <h1>Welcome, {user.username}</h1>
-            <Button onClick={handleLogout}>Logout</Button>
-      <h1>Your Notes</h1>
+    <div className="container mx-auto p-6">
+  {user ? (
+    <>
+      {/* Header Section */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold">📒 Notes</h1>
+        <h1>Welcome, {user.username}</h1>
+        <div className="flex items-center space-x-4">
+          <Button variant="outline" onClick={() => setOpenDialog(true)}>
+            <PlusCircle size={20} className="mr-2" /> Add Note
+          </Button>
+          <Button variant="destructive" onClick={handleLogout}>Logout</Button>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <input
+      {/* Search & Filter Section */}
+      <div className="flex items-center space-x-2 mb-4">
+        <Input
           type="text"
-          placeholder="Title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          required
+          placeholder="Search notes..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-2 border rounded-lg"
         />
-        <textarea
-          placeholder="Content"
-          value={form.content}
-          onChange={(e) => setForm({ ...form, content: e.target.value })}
-          required
-        />
-        <select
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-        >
-          <option value="General">General</option>
-          <option value="Work">Work</option>
-          <option value="Personal">Personal</option>
-          <option value="Ideas">Ideas</option>
-        </select>
-        <button type="submit">{editingNote ? 'Update Note' : 'Add Note'}</button>
-      </form>
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            {uniqueCategories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Search & Category Filter */}
-      <input
-        type="text"
-        placeholder="Search notes..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-      <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
-        {uniqueCategories.map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
-      </select>
+      {/* Notes & Online Users Section */}
+      <div className="flex justify-between space-x-6 mt-6">
+        {/* Notes Grid with Fixed Medium-Sized Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
+          {filteredNotes.map((note) => (
+            <Card key={note._id} className="w-80 bg-white shadow-md p-4 rounded-lg transition hover:shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  {note.title} 
+                  <span className="text-sm text-gray-500">{note.category}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700">{note.content}</p>
+                <div className="text-sm text-gray-500 mt-2">
+                  Created by: {note.createdBy || "Unknown"} | Edited by: {note.editedBy || "Unknown"}
+                </div>
+                <div className="flex justify-end space-x-2 mt-4">
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(note)}>
+                    <Edit size={16} />
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(note._id)}>
+                    <Trash size={16} />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-      <ul>
-        {filteredNotes.map((note) => (
-          <li key={note._id}>
-            <h3>
-              {note.title} ({note.category})
-            </h3>
-            <p>{note.content}</p>
-            <button onClick={() => handleEdit(note)}>Edit</button>
-            <button onClick={() => handleDelete(note._id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-
-      <h2>Online Users</h2>
-      <ul>
-        {onlineUsers.map((user, index) => (
-          <li key={index}>
-            {user.username} {user.online ? "(Online)" : "(Offline)"}
-          </li>
-        ))}
-      </ul>
-      </>
+        {/* Online Users Panel (Fixed Width) */}
+        <div className="bg-gray-100 p-4 rounded-lg shadow-md w-64 h-fit">
+          <h2 className="text-xl font-bold mb-2">Online Users</h2>
+          <ul className="space-y-3">
+            {onlineUsers.length > 0 ? (
+              onlineUsers.map((user, index) => (
+                <li key={index} className="flex items-center space-x-3">
+                  <span
+                    className={`w-3 h-3 rounded-full ${
+                      user.online ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  ></span>
+                  <span className="text-md font-medium text-gray-700">
+                    {user.username}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {user.online ? "(Online)" : "(Offline)"}
+                  </span>
+                </li>
+              ))
             ) : (
-                <Login />
+              <p className="text-gray-500 text-sm">No users online</p>
             )}
-    </div>
+          </ul>
+        </div>
+      </div>
+    </>
+  ) : (
+    <Login />
+  )}
+</div>
+
+
   );
 };
 
