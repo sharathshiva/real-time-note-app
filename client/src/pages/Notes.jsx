@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PlusCircle, Trash, Edit, Search } from "lucide-react";
+import { AlertDialog, AlertDialogTrigger,AlertDialogContent,AlertDialogHeader, AlertDialogFooter,AlertDialogCancel} from "@/components/ui/alert-dialog";
 
 const socket = io("http://localhost:8080"); 
 
@@ -82,6 +83,7 @@ const Notes = () => {
   };
 
   const handleDelete = async (id) => {
+    if (!id) return;
     await deleteNote(id, localStorage.getItem("token"));
     fetchNotes();
   };
@@ -136,12 +138,6 @@ const Notes = () => {
 
       {/* Add Note Button */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-            {/* <DialogTrigger asChild>
-              <Button className="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full p-4 shadow-lg">
-                <PlusCircle size={24} />
-              </Button>
-            </DialogTrigger> */}
-
             <DialogContent className="p-6">
               <DialogHeader>
                 <DialogTitle>{editingNote ? "Edit Note" : "Add Note"}</DialogTitle>
@@ -195,9 +191,21 @@ const Notes = () => {
                   <Button size="sm" variant="outline" onClick={() => handleEdit(note)}>
                     <Edit size={16} />
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(note._id)}>
-                    <Trash size={16} />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="destructive">
+                            <Trash size={16} />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>Are you sure you want to delete this note?</AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <Button variant="destructive" onClick={() => handleDelete(note._id)}>Delete</Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  
                 </div>
               </CardContent>
             </Card>
