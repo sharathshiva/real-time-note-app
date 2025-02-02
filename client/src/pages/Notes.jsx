@@ -134,6 +134,46 @@ const Notes = () => {
         </Select>
       </div>
 
+      {/* Add Note Button */}
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+            {/* <DialogTrigger asChild>
+              <Button className="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full p-4 shadow-lg">
+                <PlusCircle size={24} />
+              </Button>
+            </DialogTrigger> */}
+
+            <DialogContent className="p-6">
+              <DialogHeader>
+                <DialogTitle>{editingNote ? "Edit Note" : "Add Note"}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
+                  type="text"
+                  placeholder="Title"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  required
+                />
+                <Textarea
+                  placeholder="Content"
+                  value={form.content}
+                  onChange={(e) => setForm({ ...form, content: e.target.value })}
+                  required
+                />
+                <Select value={form.category} onValueChange={(value) => setForm({ ...form, category: value })}>
+                  <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="General">General</SelectItem>
+                    <SelectItem value="Work">Work</SelectItem>
+                    <SelectItem value="Personal">Personal</SelectItem>
+                    <SelectItem value="Ideas">Ideas</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button type="submit">{editingNote ? "Update Note" : "Add Note"}</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+
       {/* Notes & Online Users Section */}
       <div className="flex justify-between space-x-6 mt-6">
         {/* Notes Grid with Fixed Medium-Sized Cards */}
