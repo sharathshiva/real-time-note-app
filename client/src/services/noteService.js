@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = "https://real-time-note-app.vercel.app/api/notes";
+const API_URL = "http://localhost:8080/api/notes";
 
 export const getNotes = async (token) => {
     return await axios.get(API_URL, { headers: { Authorization: token } });

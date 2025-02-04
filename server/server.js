@@ -16,18 +16,13 @@ const io = socketIo(server, {
   cors: { origin: "*" }
 });
 
-const corsOptions = {
-  origin: "https://real-time-note-app-ieow.vercel.app", // Allow only your frontend
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true, // Allow cookies if needed
-};
 
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
-
-const Note = require('./models/Note'); // Import Note model
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoutes);
+const Note = require('./models/Note'); // Import Note model
+
 
 const onlineUsers = {}; // Object to track online users by socket id
 

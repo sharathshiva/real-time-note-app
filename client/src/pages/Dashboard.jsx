@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const socket = io("https://real-time-note-app.vercel.app");
+const socket = io("http://localhost:8080");
 
 export default function Dashboard() {
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
-    axios.get("https://real-time-note-app.vercel.app/api/notes", {
+    axios.get("http://localhost:8080/api/notes", {
       headers: { Authorization: localStorage.getItem("token") },
     }).then((res) => setNotes(res.data));
 
