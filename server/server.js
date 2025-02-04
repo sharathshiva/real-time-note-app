@@ -16,7 +16,13 @@ const io = socketIo(server, {
   cors: { origin: "*" }
 });
 
-app.use(cors());
+const corsOptions = {
+  origin: "https://real-time-note-app-ieow.vercel.app", // Allow only your frontend
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true, // Allow cookies if needed
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const Note = require('./models/Note'); // Import Note model
@@ -56,6 +62,7 @@ io.on('connection', (socket) => {
     }
   });
 });
+
 
 server.listen(8080, () => {
   console.log("Server started at http://localhost:8080");
