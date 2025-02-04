@@ -31,3 +31,6 @@ localhost:5173 -> login
 localhost:5173/signup ->signup users
 
 localhost:5173/notes -> where notes list will be displayed
+
+![image](https://github.com/user-attachments/assets/b8a6dff6-4e94-4e90-9c67-1c73b26c2e94)
+
