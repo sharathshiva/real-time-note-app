@@ -15,6 +15,8 @@ npm run dev
 now it will run http://localhost:5173
 
 
-localhost:5173 -> login
+localhost:5173 -> login 
+
 localhost:5173/signup ->signup users
+
 localhost:5173/notes -> where notes list will be displayed
